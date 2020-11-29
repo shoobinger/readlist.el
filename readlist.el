@@ -18,18 +18,21 @@
          (book-name (org-element-property :raw-value element))
          (new-file (concat "notes/books/" book-name ".org"))
          (new-file-absolute (concat current-project new-file)))
-    ;; Create a new notes file.
-    (shell-command (concat "touch '" new-file-absolute "'"))
 
-    ;; Put the newly created file to the project cache.
-    (unless (projectile-file-cached-p new-file-absolute current-project)
-      (puthash current-project
-               (cons new-file-absolute (gethash current-project projectile-projects-cache))
-               projectile-projects-cache)
-      (projectile-serialize-cache))
+    ;; Create a new notes file if it does not exist.
+    (when (not (file-exists-p new-file-absolute))
+      ;; Write a heading with the book title.
+      (write-region (concat "* " book-name) "" new-file-absolute)
 
-    ;; Replace the heading with the link to the file.
-    (org-edit-headline (concat "[[file:" new-file "][" book-name "]]"))))
+      ;; Put the newly created file to the project cache.
+      (unless (projectile-file-cached-p new-file-absolute current-project)
+        (puthash current-project
+                 (cons new-file-absolute (gethash current-project projectile-projects-cache))
+                 projectile-projects-cache)
+        (projectile-serialize-cache))
+
+      ;; Replace the heading with the link to the file.
+      (org-edit-headline (concat "[[file:" new-file "][" book-name "]]")))))
 
 (provide 'readlist)
 
